@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تسجيل طالب جديد - المركز الثقافي</title>
+<style>
+  :root { --bg:#f4f1ea; --card:#fff; --ink:#1f2937; --muted:#6b7280; --brand:#0f766e; --brand-dark:#0b5a54; --err:#b91c1c; --ok:#047857; --line:#e5e7eb; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Tahoma, "Segoe UI", Arial, sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .card { background:var(--card); width:100%; max-width:480px; border-radius:16px; padding:28px 24px; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+  h1 { margin:0 0 4px; font-size:22px; color:var(--brand); }
+  p.sub { margin:0 0 20px; color:var(--muted); font-size:14px; }
+  label { display:block; font-size:14px; font-weight:bold; margin:14px 0 6px; }
+  input, select, textarea { width:100%; padding:12px; border:1px solid var(--line); border-radius:10px; font:inherit; background:#fff; }
+  input:focus, select:focus, textarea:focus { outline:2px solid var(--brand); border-color:transparent; }
+  textarea { min-height:80px; resize:vertical; }
+  button { width:100%; margin-top:22px; padding:14px; border:0; border-radius:10px; background:var(--brand); color:#fff; font:inherit; font-weight:bold; font-size:16px; cursor:pointer; }
+  button:hover { background:var(--brand-dark); }
+  button:disabled { opacity:.6; cursor:wait; }
+  #msg { margin-top:16px; padding:12px; border-radius:10px; font-size:14px; display:none; }
+  #msg.ok { display:block; background:#ecfdf5; color:var(--ok); }
+  #msg.err { display:block; background:#fef2f2; color:var(--err); }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111827; --card:#1f2937; --ink:#f3f4f6; --muted:#9ca3af; --line:#374151; }
+    input, select, textarea { background:#111827; color:var(--ink); }
+    #msg.ok { background:#064e3b; color:#a7f3d0; } #msg.err { background:#7f1d1d; color:#fecaca; }
+  }
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>المركز الثقافي</h1>
+  <p class="sub">نموذج تسجيل طالب جديد</p>
+
+  <form id="f">
+    <label for="name">اسم الطالب</label>
+    <input id="name" name="name" required minlength="3" autocomplete="name">
+
+    <label for="phone">رقم الهاتف</label>
+    <input id="phone" name="phone" type="tel" required inputmode="tel" placeholder="079xxxxxxx">
+
+    <label for="grade">الصف</label>
+    <select id="grade" name="grade" required>
+      <option value="">اختر الصف</option>
+      <option>الصف الأول</option><option>الصف الثاني</option><option>الصف الثالث</option>
+      <option>الصف الرابع</option><option>الصف الخامس</option><option>الصف السادس</option>
+      <option>الصف السابع</option><option>الصف الثامن</option><option>الصف التاسع</option>
+      <option>الصف العاشر</option><option>الصف الحادي عشر</option><option>الصف الثاني عشر (توجيهي)</option>
+    </select>
+
+    <label for="subject">المادة المطلوبة</label>
+    <select id="subject" name="subject" required>
+      <option value="">اختر المادة</option>
+      <option>رياضيات</option><option>فيزياء</option><option>لغة إنجليزية</option>
+      <option>لغة عربية</option><option>علوم</option>
+    </select>
+
+    <label for="notes">ملاحظات (اختياري)</label>
+    <textarea id="notes" name="notes" maxlength="500"></textarea>
+
+    <button id="btn" type="submit">تسجيل</button>
+    <div id="msg" role="status"></div>
+  </form>
+</main>
+
+<script>
+  // ضع رابط الـ Webhook هنا (Production URL بعد نشر الـ workflow، أو Test URL أثناء التجربة).
+  // أو مرّره في الرابط: registration-form.html?hook=https://.../webhook/student-registration
+  const DEFAULT_WEBHOOK = "https://YOUR-N8N-HOST/webhook-test/student-registration";
+  const WEBHOOK_URL = new URLSearchParams(location.search).get("hook") || DEFAULT_WEBHOOK;
+
+  const f = document.getElementById("f"), btn = document.getElementById("btn"), msg = document.getElementById("msg");
+  const show = (cls, text) => { msg.className = cls; msg.textContent = text; };
+
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    btn.disabled = true; msg.className = "";
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(f)))
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        show("ok", "تم تسجيل الطالب بنجاح. رقم التسجيل: " + data.studentId + (data.teacher ? " - المدرّس: " + data.teacher : ""));
+        f.reset();
+      } else {
+        show("err", (data.errors && data.errors.join(" - ")) || "تعذّر التسجيل، حاول مرة أخرى.");
+      }
+    } catch (err) {
+      show("err", "تعذّر الاتصال بالخادم. تأكد من رابط الـ Webhook.");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

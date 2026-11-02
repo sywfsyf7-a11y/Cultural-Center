@@ -68,7 +68,7 @@
   // ضع هنا رابط الـ Production URL من عقدة Student Registration Webhook في n8n
   // مثال: https://your-name.app.n8n.cloud/webhook/student-registration
   // (للتجربة فقط يمكن تمريره في الرابط: ?hook=https://.../webhook-test/student-registration)
-  const DEFAULT_WEBHOOK = "https://cultural-center-i5b2.onrender.com/webhook/student-registration";
+  const DEFAULT_WEBHOOK = "https://cultural-center-i5b2.onrender.com";
   const WEBHOOK_URL = new URLSearchParams(location.search).get("hook") || DEFAULT_WEBHOOK;
 
   const f = document.getElementById("f"), btn = document.getElementById("btn"), msg = document.getElementById("msg");
